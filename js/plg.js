@@ -9,6 +9,9 @@ var raycaster;
 var blocker = document.getElementById( 'blocker' );
 var instructions = document.getElementById( 'instructions' );
 
+Physijs.scripts.worker = 'js/vendor/physijs_worker.js';
+Physijs.scripts.ammo = 'ammo.js';
+
 
 var havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
 
@@ -100,20 +103,24 @@ animate();
 
 function init() {
 
-	camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
+	
 
-	scene = new THREE.Scene();
-	scene.fog = new THREE.Fog( 0x00ffff, 0, 750 );
+	scene = new Physijs.Scene;
+    scene.setGravity(
+        new THREE.Vector3(0,0,0)
+    );
+	//scene.fog = new THREE.Fog( 0x00ccff, 0, 750 );
 
-	var light = new THREE.DirectionalLight( 0xffffff, 1.5 );
-	light.position.set( 1, 1, 1 );
-	scene.add( light );
+    pl = new Physijs.CapsuleMesh(
+		new THREE.CylinderGeometry(0.8, 0.8, 2.0),
+		new THREE.MeshBasicMaterial({ color: 0xff00ff }),
+		100
+	);
+	pl.visible = false;
+	pl.geometry.dynamic = false;
+    p1.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 3000 );
 
-	var light = new THREE.DirectionalLight( 0xffffff, 0.75 );
-	light.position.set( -1, - 0.5, -1 );
-	scene.add( light );
-
-	controls = new THREE.PointerLockControls( camera );
+    controls = new THREE.PointerLockControls( p1.camera );
 	scene.add( controls.getObject() );
 
 	raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
@@ -123,83 +130,84 @@ function init() {
 	geometry = new THREE.PlaneGeometry( 2000, 2000, 100, 100 );
 	geometry.applyMatrix( new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) );
 
-	for ( var i = 0, l = geometry.vertices.length; i < l; i ++ ) {
+	//for ( var i = 0, l = geometry.vertices.length; i < l; i ++ ) {
 
-		var vertex = geometry.vertices[ i ];
-		vertex.x += Math.random() * 20 - 10;
-		vertex.y += Math.random() * 2;
-		vertex.z += Math.random() * 20 - 10;
+	//	var vertex = geometry.vertices[ i ];
+	//	vertex.x += Math.random() * 20 - 10;
+	//	vertex.y += Math.random() * 2;
+	//	vertex.z += Math.random() * 20 - 10;
 
-	}
+	//}
 
-	for ( var i = 0, l = geometry.faces.length; i < l; i ++ ) {
+	//for ( var i = 0, l = geometry.faces.length; i < l; i ++ ) {
 
-		var face = geometry.faces[ i ];
-		face.vertexColors[ 0 ] = new THREE.Color().setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-		face.vertexColors[ 1 ] = new THREE.Color().setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-		face.vertexColors[ 2 ] = new THREE.Color().setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
+	//	var face = geometry.faces[ i ];
+	//	face.vertexColors[ 0 ] = new THREE.Color().setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
+	//	face.vertexColors[ 1 ] = new THREE.Color().setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
+	//	face.vertexColors[ 2 ] = new THREE.Color().setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
 
-	}
+	//}
 
-	material = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } );
+	material = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, transparent: true, opacity: 0.1} );
 
 	mesh = new THREE.Mesh( geometry, material );
 	scene.add( mesh );
 
-    // Wall
-    var wallMaterial =
-	  new THREE.MeshLambertMaterial(
-		{
-		  color: 0x00CC00
-		});
+    // Walls
+    var material = new THREE.MeshBasicMaterial( {color: 0x000000, transparent: true, opacity: 0.90} );
 
-    var wall = new THREE.Mesh(
+    var geometry = new THREE.BoxGeometry( 81, 36, .01);
+    var cube = new THREE.Mesh( geometry, material );
+    cube.position.z -= 40.5;
+    cube.position.y += 18;
+    objects.push(cube);
+    //scene.add( cube );
 
-	  new THREE.CubeGeometry( 
-	  81, 
-	  9, 
-	  1, 
-	  1, 
-	  1,
-	  1 ),
+    var geometry = new THREE.BoxGeometry( 81, 36, .01);
+    var cube = new THREE.Mesh( geometry, material );
+    cube.position.z += 40.5;
+    cube.position.y += 18;
+    objects.push(cube);
+    //scene.add( cube );
 
-	  wallMaterial);
-    // set ground to arbitrary z position to best show off shadowing
-	wall.position.z -= 5;
-	wall.position.y += 4.5;
-	wall.receiveShadow = true;
-	scene.add(wall);
+    cube = new Physijs.BoxMesh( 
+        new THREE.BoxGeometry( .01, 36, 81),
+        Physijs.createMaterial( material, 1, 1)
+    );
+    cube.position.y += 18;
+    cube.position.x += 40.5;
+    cube.addEventListener('collision', function(object) {
+        console.log("Object " + this.id + " collided with " + object.id);
+    });
+    objects.push(cube);
+    //scene.add( cube );
 
-	/* objects
+    var geometry = new THREE.BoxGeometry( 81, .01, 81);
+    var cube = new THREE.Mesh( geometry, material );
+    cube.position.y += 36;
+    objects.push(cube);
+    //scene.add( cube );
+    scene.add(objects);
 
-	geometry = new THREE.BoxGeometry( 20, 20, 20 );
+    for (var i = 0; i < objects.length; i++)
+    {
+        scene.add(objects[i]);
+    }
 
-	for ( var i = 0, l = geometry.faces.length; i < l; i ++ ) {
+    // Skybox
+        group = new THREE.Object3D();
+	scene.add( group );
 
-		var face = geometry.faces[ i ];
-		face.vertexColors[ 0 ] = new THREE.Color().setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-		face.vertexColors[ 1 ] = new THREE.Color().setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-		face.vertexColors[ 2 ] = new THREE.Color().setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
+    var loader = new THREE.TextureLoader();
+	loader.load( 'img/milky_way.jpg', function ( texture ) {
 
-	}
+		var geometry = new THREE.SphereGeometry( 2000, 200, 200);
 
-	for ( var i = 0; i < 500; i ++ ) {
-
-		material = new THREE.MeshPhongMaterial( { specular: 0xffffff, shading: THREE.FlatShading, vertexColors: THREE.VertexColors } );
-
+		var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: 0.5, side: THREE.DoubleSide } );
 		var mesh = new THREE.Mesh( geometry, material );
-		mesh.position.x = Math.floor( Math.random() * 20 - 10 ) * 20;
-		mesh.position.y = Math.floor( Math.random() * 20 ) * 20 + 10;
-		mesh.position.z = Math.floor( Math.random() * 20 - 10 ) * 20;
-		scene.add( mesh );
+		group.add( mesh );
 
-		material.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-
-		objects.push( mesh );
-
-	}
-
-	*/
+	} );
 
 	renderer = new THREE.WebGLRenderer();
 	renderer.setClearColor( 0xffffff );
@@ -215,8 +223,8 @@ function init() {
 
 function onWindowResize() {
 
-	camera.aspect = window.innerWidth / window.innerHeight;
-	camera.updateProjectionMatrix();
+	p1.camera.aspect = window.innerWidth / window.innerHeight;
+	p1.camera.updateProjectionMatrix();
 
 	renderer.setSize( window.innerWidth, window.innerHeight );
 
@@ -225,6 +233,7 @@ function onWindowResize() {
 function animate() {
 
 	requestAnimationFrame( animate );
+	scene.simulate();
 
 	controls.isOnObject( false );
 
@@ -241,6 +250,6 @@ function animate() {
 
 	controls.update();
 
-	renderer.render( scene, camera );
+	renderer.render( scene, p1.camera );
 
 }
