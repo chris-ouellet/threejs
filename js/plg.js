@@ -118,7 +118,7 @@ function init() {
 	);
 	pl.visible = false;
 	pl.geometry.dynamic = false;
-    p1.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 3000 );
+    p1.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
 
     controls = new THREE.PointerLockControls( p1.camera );
 	scene.add( controls.getObject() );
@@ -129,6 +129,14 @@ function init() {
 
 	geometry = new THREE.PlaneGeometry( 2000, 2000, 100, 100 );
 	geometry.applyMatrix( new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) );
+
+	var sphere = new THREE.SphereGeometry( 1, 16, 8 );
+
+	light1 = new THREE.PointLight( 0x00ccff, 1, 0);
+	light1.add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0x00ccff } ) ) );
+	light1.position.y += 5;
+
+	scene.add( light1 );
 
 	//for ( var i = 0, l = geometry.vertices.length; i < l; i ++ ) {
 
@@ -148,13 +156,13 @@ function init() {
 
 	//}
 
-	material = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, transparent: true, opacity: 0.1} );
+	material = new THREE.MeshPhongMaterial( { color: 0x000000, transparent: true, opacity: .1, specular: 0xffffff, shininess: 50, shading: THREE.SmoothShading, ambient: 0x555555} );
 
 	mesh = new THREE.Mesh( geometry, material );
 	scene.add( mesh );
 
     // Walls
-    var material = new THREE.MeshBasicMaterial( {color: 0x000000, transparent: true, opacity: 0.90} );
+    var material = new THREE.MeshPhongMaterial( {color: 0x111111, transparent: true, opacity: .5, specular: 0xffffff, shininess: 1, shading: THREE.SmoothShading, ambient: 0x555555} );
 
     var geometry = new THREE.BoxGeometry( 81, 36, .01);
     var cube = new THREE.Mesh( geometry, material );
