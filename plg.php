@@ -9,11 +9,11 @@
 		<meta charset="utf-8">
 		<title>three.js - pointerlock controls</title>
         <link rel="stylesheet" type="text/css" href="css/plg.css">
-		<script src="js/three.min.js"></script>
+
+		<script src="js/three.js"></script>
 		<script src="js/controls/PointerLockControls.js"></script>
-        <script src="js/vendor/ammo.js"></script>
         <script src="js/vendor/physi.js"></script>
-        <script src="js/vendor/physijs_worker.js"></script>
+        <script src="js/vendor/ammo.js"></script>
 	</head>
 	<body>
 

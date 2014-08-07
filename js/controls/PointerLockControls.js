@@ -20,6 +20,8 @@ THREE.PointerLockControls = function ( camera ) {
 	var moveLeft = false;
 	var moveRight = false;
 
+	var collisionX = 1;
+
 	var isOnObject = false;
 	var canJump = false;
 
@@ -122,6 +124,10 @@ THREE.PointerLockControls = function ( camera ) {
 
 	};
 
+	this.collisionX = function ( val ) {
+		collisionX = val;
+	};
+
 	this.getDirection = function() {
 
 		// assumes the camera itself is not rotated
@@ -148,15 +154,15 @@ THREE.PointerLockControls = function ( camera ) {
 		var time = performance.now();
 		var delta = ( time - prevTime ) / 1000;
 
-		velocity.x -= velocity.x * 10.0 * delta;
+		velocity.x -= velocity.x * 10.0 * delta * collisionX;
 		velocity.z -= velocity.z * 10.0 * delta;
 
 		velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
 
-		if ( moveForward ) velocity.z -= 400.0 * delta;
-		if ( moveBackward ) velocity.z += 400.0 * delta;
+		if ( moveForward ) velocity.z -= 400.0 * delta *collisionX;
+		if ( moveBackward ) velocity.z += 400.0 * delta ;
 
-		if ( moveLeft ) velocity.x -= 400.0 * delta;
+		if ( moveLeft ) velocity.x -= 400.0 * delta ;
 		if ( moveRight ) velocity.x += 400.0 * delta;
 
 		if ( isOnObject === true ) {
